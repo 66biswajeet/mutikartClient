@@ -1,0 +1,44 @@
+.ticker {
+  width: 100%;
+  background: #e53935; /* red */
+  color: #fff;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.track {
+  display: flex;
+  width: 200%; /* allow two blocks to scroll */
+  animation: scroll-left 18s linear infinite;
+}
+
+.block {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.item {
+  display: inline-block;
+  padding: 14px 48px;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.6px;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 768px) {
+  .item {
+    padding: 12px 28px;
+    font-size: 15px;
+  }
+}

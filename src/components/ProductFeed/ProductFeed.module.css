@@ -1,0 +1,283 @@
+.feed {
+  padding: 40px 0 60px;
+  background: var(--bg-secondary);
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.header h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.header p {
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.grid {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  /* hide scrollbar across browsers */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.grid::-webkit-scrollbar {
+  display: none; /* Safari & Chrome */
+}
+
+.grid > * {
+  flex: 0 0 260px; /* smaller card width */
+  scroll-snap-align: start;
+}
+
+/* Load More */
+.loadMore {
+  display: flex;
+  justify-content: center;
+  padding-top: 20px;
+}
+
+.loadMoreBtn {
+  padding: 14px 32px;
+  background: white;
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-sm);
+}
+
+.loadMoreBtn:hover {
+  background: var(--accent-orange);
+  color: white;
+  border-color: var(--accent-orange);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.loadMoreBtn svg {
+  transition: transform var(--transition-fast);
+}
+
+.loadMoreBtn:hover svg {
+  transform: rotate(90deg);
+}
+
+.loadMoreBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.paginationInfo {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.loading p {
+  margin-top: 20px;
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.smallSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.error p {
+  font-size: 16px;
+  color: var(--error-red);
+  margin-bottom: 20px;
+}
+
+.retryBtn {
+  padding: 12px 28px;
+  background: var(--accent-orange);
+  color: white;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.retryBtn:hover {
+  background: var(--accent-orange-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Empty State */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.empty p {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.empty p:first-child {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .grid {
+    gap: 20px;
+  }
+
+  .grid > * {
+    flex: 0 0 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .feed {
+    padding: 32px 0 48px;
+  }
+
+  .container {
+    padding: 0 16px;
+  }
+
+  .header {
+    margin-bottom: 32px;
+  }
+
+  .header h2 {
+    font-size: 26px;
+  }
+
+  .header p {
+    font-size: 15px;
+  }
+
+  .grid {
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .grid > * {
+    flex: 0 0 220px;
+  }
+
+  .loadMoreBtn {
+    padding: 12px 28px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    gap: 12px;
+  }
+
+  .grid > * {
+    flex: 0 0 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .feed {
+    padding: 24px 0 40px;
+  }
+
+  .container {
+    padding: 0 12px;
+  }
+
+  .header {
+    margin-bottom: 24px;
+  }
+
+  .header h2 {
+    font-size: 24px;
+  }
+
+  .header p {
+    font-size: 14px;
+  }
+
+  .grid {
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .grid > * {
+    flex: 0 0 160px;
+  }
+}
