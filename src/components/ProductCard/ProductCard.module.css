@@ -87,6 +87,9 @@
   transform: scale(0.8);
   transition: all var(--transition-normal);
   z-index: 2;
+  color: var(--text-secondary);
+  border: none;
+  cursor: pointer;
 }
 
 .card:hover .wishlistBtn {
@@ -98,6 +101,17 @@
   background: var(--primary-blue);
   color: white;
   transform: scale(1.1);
+}
+
+.wishlistBtn.inWishlist {
+  opacity: 1;
+  background: var(--primary-blue);
+  color: white;
+}
+
+.wishlistBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .wishlistBtn:active {

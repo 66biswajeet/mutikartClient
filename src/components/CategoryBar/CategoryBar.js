@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import styles from "./CategoryBar.module.css";
 
 const API_BASE = (
-  process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3002"
+  process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000"
 ).replace(/\/$/, "");
 
 export default function CategoryBar({ onMenuClick }) {

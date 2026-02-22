@@ -70,6 +70,10 @@ export default function HeroCarousel() {
                 }
                 alt={`slide-${i + 1}`}
                 className={styles.image}
+                // First image gets priority loading for LCP
+                fetchpriority={i === 0 ? "high" : "low"}
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding="async"
                 onError={() => {
                   setErrored((prev) => {
                     const copy = [...prev];

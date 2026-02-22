@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from "react";
 import styles from "./Sidebar.module.css";
+import AuthModal from "@/components/Auth/AuthModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 const API_BASE = (
   process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3002"
 ).replace(/\/$/, "");
 
 export default function Sidebar({ isOpen, onClose }) {
+  const { user, logout, isAuthenticated } = useAuth();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -76,6 +80,15 @@ export default function Sidebar({ isOpen, onClose }) {
     }
   };
 
+  const handleAuthClick = () => {
+    setIsAuthModalOpen(true);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = "/";
+  };
+
   return (
     <>
       {/* Overlay */}
@@ -83,6 +96,13 @@ export default function Sidebar({ isOpen, onClose }) {
         className={`${styles.overlay} ${isOpen ? styles.visible : ""}`}
         onClick={handleOverlayClick}
         aria-hidden={!isOpen}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialView="login"
       />
 
       {/* Sidebar */}
@@ -99,8 +119,24 @@ export default function Sidebar({ isOpen, onClose }) {
               />
             </svg>
             <div>
-              <h3>Hello, Guest</h3>
-              <button className={styles.signInLink}>Sign In / Register</button>
+              {isAuthenticated ? (
+                <>
+                  <h3>Hello, {user?.name?.split(" ")[0] || "User"}</h3>
+                  <button className={styles.signInLink} onClick={handleLogout}>
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h3>Hello, Guest</h3>
+                  <button
+                    className={styles.signInLink}
+                    onClick={handleAuthClick}
+                  >
+                    Sign In / Register
+                  </button>
+                </>
+              )}
             </div>
           </div>
           <button

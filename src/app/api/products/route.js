@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL;
+const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
 
 /**
  * GET /api/products - Fetch products from admin backend
@@ -9,36 +9,55 @@ const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL;
 export async function GET(request) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const page = searchParams.get("page") || "1";
-    const limit = searchParams.get("limit") || "12";
-    const search = searchParams.get("search") || "";
-    const category = searchParams.get("category") || "";
 
-    // Build query params for admin API
-    const queryParams = new URLSearchParams({
-      page,
-      paginate: limit,
-      ...(search && { search }),
-      ...(category && { category }),
-    });
+    // Forward all incoming query params (including slug) to admin API
+    const queryParams = new URLSearchParams();
+    for (const [key, value] of searchParams.entries()) {
+      // Map `limit` -> `paginate` for admin API compatibility
+      if (key === "limit") {
+        queryParams.set("paginate", value);
+        continue;
+      }
+      if (key === "page") {
+        queryParams.set("page", value);
+        continue;
+      }
+      // If client passed a numeric/object id as `slug`, forward as `product_id`
+      if (key === "slug") {
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(value);
+        if (isObjectId) {
+          queryParams.set("product_id", value);
+          continue;
+        }
+      }
+      queryParams.set(key, value);
+    }
 
     // Fetch from admin API
-    const response = await fetch(
-      `${ADMIN_API_URL}/api/product?${queryParams}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // Add cache control for better performance
-        next: { revalidate: 60 }, // Revalidate every 60 seconds
-      }
-    );
+    const adminUrl = `${ADMIN_API_URL.replace(/\/$/, "")}/api/product?${queryParams.toString()}`;
+    // Debug: log the admin URL being requested so we can confirm forwarding
+    console.log("[proxy] forwarding to admin URL:", adminUrl);
+    const response = await fetch(adminUrl, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // Add cache control for better performance
+      next: { revalidate: 60 }, // Revalidate every 60 seconds
+    });
 
     if (!response.ok) {
       throw new Error("Failed to fetch products from admin API");
     }
 
     const data = await response.json();
+
+    // If the client requested a specific product via `slug`, return the
+    // admin API response as-is (it contains full product details used by
+    // the product detail page). For list requests, return the transformed
+    // lightweight product objects used by product lists.
+    if (searchParams.has("slug")) {
+      return NextResponse.json(data);
+    }
 
     // Transform the data to match client-side needs
     const transformedProducts =
@@ -79,11 +98,13 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error("Product API Error:", error);
+    // Include admin URL in the error response to aid debugging
     return NextResponse.json(
       {
         success: false,
         message: "Failed to fetch products",
         error: error.message,
+        adminUrl: ADMIN_API_URL,
       },
       { status: 500 }
     );
