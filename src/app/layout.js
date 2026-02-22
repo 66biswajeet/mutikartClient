@@ -1,7 +1,9 @@
 import "@/styles/globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
+import { CartProvider } from "@/contexts/CartContext";
 import Header from "@/components/Header/Header";
+import CartSlider from "@/components/CartSlider/CartSlider";
 
 export const metadata = {
   title: "Multikart - Modern E-Commerce",
@@ -46,8 +48,11 @@ export default function RootLayout({ children }) {
       <body>
         <AuthProvider>
           <WishlistProvider>
-            <Header />
-            {children}
+            <CartProvider>
+              <Header />
+              {children}
+              <CartSlider />
+            </CartProvider>
           </WishlistProvider>
         </AuthProvider>
       </body>

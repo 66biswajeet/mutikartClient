@@ -11,24 +11,17 @@ export default function AddressesPage() {
   const [addresses, setAddresses] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
-  const [addressType, setAddressType] = useState("Residential");
 
+  // Form fields aligned with backend Address model
   const [formData, setFormData] = useState({
-    buildingName: "",
-    floor: "",
-    unit: "",
-    island: "Maldives",
-    atoll: "",
-    country: "Maldives",
-    contactName: "",
-    contactNo: "",
-    isDefault: false,
-    // Vessel specific fields
-    vesselName: "",
-    dockJettyFloatMale: "",
-    contactNameVessel: "",
-    contactNoVessel: "",
-    isDefaultVessel: false,
+    label: "Home",
+    street: "",
+    city: "",
+    state: "",
+    country: "",
+    zip: "",
+    phone: "",
+    is_default: false,
   });
 
   useEffect(() => {
@@ -38,20 +31,24 @@ export default function AddressesPage() {
   }, [loading, isAuthenticated]);
 
   useEffect(() => {
-    // TODO: Fetch addresses from backend
-    const mockAddresses = [
-      {
-        id: 1,
-        type: "Residential",
-        name: "Jeon Doe",
-        address: "H. New Florida, Unit 49",
-        details: "5th Floor, Ahmed Magu, Malé, Maldives",
-        phone: "+960 7496969",
-        isDefault: true,
-      },
-    ];
-    setAddresses(mockAddresses);
-  }, []);
+    if (!loading && isAuthenticated) fetchAddresses();
+  }, [loading, isAuthenticated]);
+
+  const fetchAddresses = async () => {
+    try {
+      const res = await fetch("/api/address", { credentials: "include" });
+      const data = await res.json();
+      if (data.success) {
+        // map backend _id to id for consistent rendering
+        setAddresses((data.data || []).map((a) => ({ ...a })));
+      } else {
+        setAddresses([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch addresses:", err);
+      setAddresses([]);
+    }
+  };
 
   if (loading) {
     return (
@@ -71,105 +68,108 @@ export default function AddressesPage() {
   const handleAddNew = () => {
     setEditingAddress(null);
     setFormData({
-      buildingName: "",
-      floor: "",
-      unit: "",
-      island: "Maldives",
-      atoll: "",
-      country: "Maldives",
-      contactName: "",
-      contactNo: "",
-      isDefault: false,
-      vesselName: "",
-      dockJettyFloatMale: "",
-      contactNameVessel: "",
-      contactNoVessel: "",
-      isDefaultVessel: false,
+      label: "Home",
+      street: "",
+      city: "",
+      state: "",
+      country: "",
+      zip: "",
+      phone: "",
+      is_default: false,
     });
-    setAddressType("Residential");
     setShowAddModal(true);
   };
 
   const handleEdit = (address) => {
     setEditingAddress(address);
     setFormData({
-      buildingName: address.buildingName || "",
-      floor: address.floor || "",
-      unit: address.unit || "",
-      island: address.island || "Maldives",
-      atoll: address.atoll || "",
-      country: address.country || "Maldives",
-      contactName: address.name || "",
-      contactNo: address.phone || "",
-      isDefault: address.isDefault || false,
-      vesselName: address.vesselName || "",
-      dockJettyFloatMale: address.dockJettyFloatMale || "",
-      contactNameVessel: address.contactNameVessel || "",
-      contactNoVessel: address.contactNoVessel || "",
-      isDefaultVessel: address.isDefaultVessel || false,
+      label: address.label || "Home",
+      street: address.street || "",
+      city: address.city || "",
+      state: address.state || "",
+      country: address.country || "",
+      zip: address.zip || "",
+      phone: address.phone || "",
+      is_default: address.is_default || false,
     });
-    setAddressType(address.type || "Residential");
     setShowAddModal(true);
   };
 
-  const handleRemove = (addressId) => {
-    if (confirm("Are you sure you want to remove this address?")) {
-      setAddresses(addresses.filter((addr) => addr.id !== addressId));
-      // TODO: Delete from backend
+  const handleRemove = async (addressId) => {
+    if (!confirm("Are you sure you want to remove this address?")) return;
+    try {
+      const res = await fetch(`/api/address/${addressId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchAddresses();
+      } else {
+        alert(data.message || "Failed to delete address");
+      }
+    } catch (err) {
+      console.error("Failed to delete address:", err);
+      alert("Failed to delete address");
     }
   };
 
-  const handleSetDefault = (addressId) => {
-    setAddresses(
-      addresses.map((addr) => ({
-        ...addr,
-        isDefault: addr.id === addressId,
-      })),
-    );
-    // TODO: Update backend
-  };
-
-  const handleSave = () => {
-    if (editingAddress) {
-      // Update existing
-      setAddresses(
-        addresses.map((addr) =>
-          addr.id === editingAddress.id
-            ? { ...editingAddress, ...formData }
-            : addr,
-        ),
+  const handleSetDefault = async (addressId) => {
+    try {
+      // Update chosen address to is_default=true
+      const address = addresses.find(
+        (a) => a._id === addressId || a.id === addressId,
       );
-    } else {
-      // Add new
-      const newAddress = {
-        id: Date.now(),
-        type: addressType,
-        name:
-          addressType === "Residential"
-            ? formData.contactName
-            : formData.contactNameVessel,
-        address:
-          addressType === "Residential"
-            ? `${formData.buildingName}, Unit ${formData.unit}`
-            : formData.vesselName,
-        details:
-          addressType === "Residential"
-            ? `${formData.floor}, ${formData.atoll}, ${formData.island}`
-            : formData.dockJettyFloatMale,
-        phone:
-          addressType === "Residential"
-            ? formData.contactNo
-            : formData.contactNoVessel,
-        isDefault:
-          addressType === "Residential"
-            ? formData.isDefault
-            : formData.isDefaultVessel,
-        ...formData,
-      };
-      setAddresses([...addresses, newAddress]);
+      if (!address) return;
+      const body = { ...address, is_default: true };
+      const res = await fetch(`/api/address/${address._id || address.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchAddresses();
+      } else {
+        alert(data.message || "Failed to set default");
+      }
+    } catch (err) {
+      console.error("Failed to set default:", err);
+      alert("Failed to set default");
     }
-    setShowAddModal(false);
-    // TODO: Save to backend
+  };
+
+  const handleSave = async () => {
+    try {
+      if (editingAddress) {
+        const res = await fetch(
+          `/api/address/${editingAddress._id || editingAddress.id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(formData),
+          },
+        );
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || "Update failed");
+      } else {
+        const res = await fetch(`/api/address`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(formData),
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || "Create failed");
+      }
+      await fetchAddresses();
+      setShowAddModal(false);
+    } catch (err) {
+      console.error("Failed to save address:", err);
+      alert(err.message || "Failed to save address");
+    }
   };
 
   const handleChange = (field, value) => {
@@ -357,197 +357,94 @@ export default function AddressesPage() {
               {editingAddress ? "Edit Address" : "Add New Address"}
             </h2>
 
-            {/* Address Type Toggle */}
-            <div className={styles.typeToggle}>
-              <button
-                className={
-                  addressType === "Residential"
-                    ? styles.typeActive
-                    : styles.typeInactive
-                }
-                onClick={() => setAddressType("Residential")}
-              >
-                ● Residential
-              </button>
-              <button
-                className={
-                  addressType === "Vessel"
-                    ? styles.typeActive
-                    : styles.typeInactive
-                }
-                onClick={() => setAddressType("Vessel")}
-              >
-                ● Vessel
-              </button>
+            <div className={styles.formFields}>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Label</label>
+                  <select
+                    value={formData.label}
+                    onChange={(e) => handleChange("label", e.target.value)}
+                  >
+                    <option value="Home">Home</option>
+                    <option value="Office">Office</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Phone</label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleChange("phone", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Street Address *</label>
+                <input
+                  type="text"
+                  value={formData.street}
+                  onChange={(e) => handleChange("street", e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>City *</label>
+                  <input
+                    type="text"
+                    value={formData.city}
+                    onChange={(e) => handleChange("city", e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>State *</label>
+                  <input
+                    type="text"
+                    value={formData.state}
+                    onChange={(e) => handleChange("state", e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Country *</label>
+                  <input
+                    type="text"
+                    value={formData.country}
+                    onChange={(e) => handleChange("country", e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>ZIP Code *</label>
+                  <input
+                    type="text"
+                    value={formData.zip}
+                    onChange={(e) => handleChange("zip", e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className={styles.checkboxGroup}>
+                <input
+                  type="checkbox"
+                  id="is_default"
+                  checked={formData.is_default}
+                  onChange={(e) => handleChange("is_default", e.target.checked)}
+                />
+                <label htmlFor="is_default">Set as default address</label>
+              </div>
             </div>
-
-            {/* Residential Form */}
-            {addressType === "Residential" && (
-              <div className={styles.formFields}>
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>Building Name</label>
-                    <input
-                      type="text"
-                      value={formData.buildingName}
-                      onChange={(e) =>
-                        handleChange("buildingName", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Floor</label>
-                    <input
-                      type="text"
-                      value={formData.floor}
-                      onChange={(e) => handleChange("floor", e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>Unit</label>
-                    <input
-                      type="text"
-                      value={formData.unit}
-                      onChange={(e) => handleChange("unit", e.target.value)}
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Island</label>
-                    <select
-                      value={formData.island}
-                      onChange={(e) => handleChange("island", e.target.value)}
-                    >
-                      <option>Maldives</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>Atoll</label>
-                    <select
-                      value={formData.atoll}
-                      onChange={(e) => handleChange("atoll", e.target.value)}
-                    >
-                      <option value="">Select Atoll</option>
-                      <option>North Malé Atoll</option>
-                      <option>South Malé Atoll</option>
-                      <option>Ari Atoll</option>
-                    </select>
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Country</label>
-                    <select
-                      value={formData.country}
-                      onChange={(e) => handleChange("country", e.target.value)}
-                    >
-                      <option>Maldives</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>Contact Name</label>
-                    <input
-                      type="text"
-                      value={formData.contactName}
-                      onChange={(e) =>
-                        handleChange("contactName", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Contact No</label>
-                    <input
-                      type="tel"
-                      value={formData.contactNo}
-                      onChange={(e) =>
-                        handleChange("contactNo", e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.checkboxGroup}>
-                  <input
-                    type="checkbox"
-                    id="isDefault"
-                    checked={formData.isDefault}
-                    onChange={(e) =>
-                      handleChange("isDefault", e.target.checked)
-                    }
-                  />
-                  <label htmlFor="isDefault">Default address</label>
-                </div>
-              </div>
-            )}
-
-            {/* Vessel Form */}
-            {addressType === "Vessel" && (
-              <div className={styles.formFields}>
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>Vessel Name</label>
-                    <input
-                      type="text"
-                      value={formData.vesselName}
-                      onChange={(e) =>
-                        handleChange("vesselName", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Dock, Jetty Float, Malé</label>
-                    <input
-                      type="text"
-                      value={formData.dockJettyFloatMale}
-                      onChange={(e) =>
-                        handleChange("dockJettyFloatMale", e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>Contact Name</label>
-                    <input
-                      type="text"
-                      value={formData.contactNameVessel}
-                      onChange={(e) =>
-                        handleChange("contactNameVessel", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Contact No</label>
-                    <input
-                      type="tel"
-                      value={formData.contactNoVessel}
-                      onChange={(e) =>
-                        handleChange("contactNoVessel", e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.checkboxGroup}>
-                  <input
-                    type="checkbox"
-                    id="isDefaultVessel"
-                    checked={formData.isDefaultVessel}
-                    onChange={(e) =>
-                      handleChange("isDefaultVessel", e.target.checked)
-                    }
-                  />
-                  <label htmlFor="isDefaultVessel">Default address</label>
-                </div>
-              </div>
-            )}
 
             {/* Modal Actions */}
             <div className={styles.modalActions}>

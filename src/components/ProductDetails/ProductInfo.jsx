@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useCart } from "@/contexts/CartContext";
 import { useRouter } from "next/navigation";
 
 export default function ProductInfo({ product, quantity, onQuantityChange }) {
   const router = useRouter();
   const { user } = useAuth();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToCart } = useCart();
   const [addingToCart, setAddingToCart] = useState(false);
   const [addingToWishlist, setAddingToWishlist] = useState(false);
 
@@ -34,27 +36,10 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
 
     try {
       setAddingToCart(true);
-      const API_URL =
-        process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
+      const result = await addToCart(product, quantity);
 
-      const response = await fetch(`${API_URL}/api/cart`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          productId: product._id,
-          quantity: quantity,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert("Product added to cart!");
-      } else {
-        alert(data.message || "Failed to add to cart");
+      if (!result.success) {
+        alert(result.message || "Failed to add to cart");
       }
     } catch (error) {
       console.error("Error adding to cart:", error);

@@ -4,34 +4,31 @@ import { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 
-const ADMIN_API_URL =
-  process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for account cookie on mount
-    const accountCookie = document.cookie
+    // Check for user cookie on mount
+    const userCookie = document.cookie
       .split("; ")
-      .find((row) => row.startsWith("account="));
+      .find((row) => row.startsWith("user="));
 
-    if (accountCookie) {
+    if (userCookie) {
       try {
         const userData = JSON.parse(
-          decodeURIComponent(accountCookie.split("=")[1]),
+          decodeURIComponent(userCookie.split("=")[1]),
         );
         setUser(userData);
       } catch (error) {
-        console.error("Error parsing account cookie:", error);
+        console.error("Error parsing user cookie:", error);
       }
     }
     setLoading(false);
   }, []);
 
   const login = async (email, password) => {
-    const response = await fetch(`${ADMIN_API_URL}/api/customer/login`, {
+    const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -48,12 +45,12 @@ export function AuthProvider({ children }) {
 
     if (data.success && data.data) {
       const userData = {
-        _id: data.data.id,
-        name: data.data.name,
-        email: data.data.email,
-        phone: data.data.phone,
-        profile_image: data.data.profile_image,
-        isCustomer: true,
+        id: data.data.user.id || data.data.user._id,
+        name: data.data.user.name,
+        email: data.data.user.email,
+        phone: data.data.user.phone,
+        profile_image: data.data.user.profile_image,
+        role: data.data.user.role?.name || "user",
       };
       setUser(userData);
     }
@@ -62,7 +59,7 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (userData) => {
-    const response = await fetch(`${ADMIN_API_URL}/api/customer/register`, {
+    const response = await fetch("/api/auth/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -78,22 +75,17 @@ export function AuthProvider({ children }) {
     }
 
     if (data.success && data.data) {
-      const userData = {
-        _id: data.data.id,
-        name: data.data.name,
-        email: data.data.email,
-        phone: data.data.phone,
-        profile_image: data.data.profile_image,
-        isCustomer: true,
-      };
-      setUser(userData);
+      // After registration, auto-login
+      if (userData.email && userData.password) {
+        return await login(userData.email, userData.password);
+      }
     }
 
     return data;
   };
 
   const logout = async () => {
-    await fetch(`${ADMIN_API_URL}/api/customer/logout`, {
+    await fetch("/api/auth/logout", {
       method: "POST",
       credentials: "include",
     });

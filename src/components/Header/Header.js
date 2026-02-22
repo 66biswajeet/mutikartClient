@@ -5,10 +5,12 @@ import styles from "./Header.module.css";
 import AuthModal from "@/components/Auth/AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useCart } from "@/contexts/CartContext";
 
 export default function Header() {
   const { user, logout, isAuthenticated } = useAuth();
   const { wishlistCount } = useWishlist();
+  const { cartCount, openCart } = useCart();
   const [isVisible, setIsVisible] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -152,7 +154,11 @@ export default function Header() {
               )}
             </a>
 
-            <button className={styles.iconButton} aria-label="Shopping Cart">
+            <button
+              className={styles.iconButton}
+              aria-label="Shopping Cart"
+              onClick={openCart}
+            >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M9 2L6.5 6M15 2l2.5 4M6 6h12l-1.5 9H7.5L6 6zM8 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM16 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"
@@ -162,7 +168,9 @@ export default function Header() {
                   strokeLinejoin="round"
                 />
               </svg>
-              <span className={styles.badge}>0</span>
+              {cartCount > 0 && (
+                <span className={styles.badge}>{cartCount}</span>
+              )}
             </button>
 
             {isAuthenticated ? (
