@@ -30,6 +30,31 @@ export async function GET(request) {
           queryParams.set("product_id", value);
           continue;
         }
+        // Check if this is a vendor product slug (format: "slug-vendor_product_id")
+        const vendorSlugMatch = value.match(/^(.+)-([a-f0-9]{24})$/i);
+        if (vendorSlugMatch) {
+          // This is a combined vendor slug, route to vendor-products API instead
+          const masterSlug = vendorSlugMatch[1];
+          const vendorProductId = vendorSlugMatch[2];
+          const vendorUrl = `${ADMIN_API_URL.replace(/\/$/, "")}/api/vendor-products?slug=${encodeURIComponent(value)}`;
+          console.log(
+            "[proxy] routing vendor slug to vendor-products API:",
+            vendorUrl,
+          );
+          const response = await fetch(vendorUrl, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            next: { revalidate: 60 },
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch vendor product from admin API");
+          }
+
+          const data = await response.json();
+          return NextResponse.json(data);
+        }
       }
       queryParams.set(key, value);
     }

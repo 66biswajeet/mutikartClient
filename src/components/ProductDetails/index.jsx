@@ -27,23 +27,52 @@ export default function ProductDetails({ productSlug }) {
     async function fetchProduct() {
       try {
         setLoading(true);
-        const res = await fetch(
-          `/api/products?slug=${encodeURIComponent(productSlug)}`,
-          {
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-          },
-        );
+
+        // Check if the slug is a combined vendor slug (e.g., "product-slug-vendor_product_id")
+        // If it contains vendor product data, use vendor-products API instead
+        const isVendorSlug =
+          productSlug && productSlug.match(/-[a-f0-9]{24}$/i);
+
+        let apiUrl;
+        if (isVendorSlug) {
+          // This is a vendor product slug, use vendor-products API
+          apiUrl = `/api/vendor-products?slug=${encodeURIComponent(productSlug)}`;
+        } else {
+          // This is a master product slug, use products API
+          apiUrl = `/api/products?slug=${encodeURIComponent(productSlug)}`;
+        }
+
+        const res = await fetch(apiUrl, {
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
 
         if (!res.ok) throw new Error("Failed to fetch product");
         const data = await res.json();
 
         let item = null;
         if (data) {
-          if (Array.isArray(data.data)) item = data.data[0];
-          else if (data.data && typeof data.data === "object") item = data.data;
-          else if (Array.isArray(data)) item = data[0];
-          else if (data && data._id) item = data;
+          if (Array.isArray(data.data)) {
+            // If this is a vendor slug, find the product that matches the vendor_product_id
+            const vendorMatch = productSlug.match(/-([a-f0-9]{24})$/i);
+            if (vendorMatch) {
+              const requestedVendorId = vendorMatch[1];
+              item = data.data.find(
+                (p) =>
+                  String(p.vendor_product_id || p._id) === requestedVendorId,
+              );
+              // Fallback to first item if exact match not found
+              if (!item) item = data.data[0];
+            } else {
+              item = data.data[0];
+            }
+          } else if (data.data && typeof data.data === "object") {
+            item = data.data;
+          } else if (Array.isArray(data)) {
+            item = data[0];
+          } else if (data && data._id) {
+            item = data;
+          }
         }
 
         if (!item) throw new Error("Product not found");

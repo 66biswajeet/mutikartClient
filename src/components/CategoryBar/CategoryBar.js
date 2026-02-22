@@ -283,7 +283,7 @@ export default function CategoryBar({ onMenuClick }) {
                                 {subcategories[category.id].map((subcat) => (
                                   <li key={subcat.id}>
                                     <a
-                                      href={`/category/${subcat.slug}`}
+                                      href={`/products?category=${subcat.slug}`}
                                       className={styles.subcategoryLink}
                                     >
                                       {subcat.name}
