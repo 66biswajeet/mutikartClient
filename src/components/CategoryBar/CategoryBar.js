@@ -25,7 +25,7 @@ export default function CategoryBar({ onMenuClick }) {
     const fetchCategories = async () => {
       try {
         const response = await fetch(
-          `${API_BASE}/api/category?type=product&status=1&parent_id=null&limit=20&include_subcategories=true`
+          `${API_BASE}/api/category?type=product&status=1&parent_id=null&limit=20&include_subcategories=true`,
         );
 
         if (!response.ok) {
@@ -52,7 +52,7 @@ export default function CategoryBar({ onMenuClick }) {
                   id: subcat._id || subcat.id,
                   name: subcat.display_name || subcat.name,
                   slug: subcat.slug,
-                })
+                }),
               );
             }
           });
@@ -230,7 +230,7 @@ export default function CategoryBar({ onMenuClick }) {
                     onMouseEnter={() =>
                       handleCategoryMouseEnter(
                         category.id,
-                        category.hasSubcategories
+                        category.hasSubcategories,
                       )
                     }
                     onMouseLeave={handleCategoryMouseLeave}

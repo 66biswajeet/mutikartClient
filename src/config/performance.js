@@ -7,9 +7,9 @@ export const PERFORMANCE_CONFIG = {
   // Image optimization settings
   images: {
     quality: 85, // Balance between quality and file size
-    formats: ['image/webp', 'image/avif'],
-    lazyLoadOffset: '200px', // Start loading images 200px before viewport
-    placeholder: 'blur', // Use blur placeholder
+    formats: ["image/webp", "image/avif"],
+    lazyLoadOffset: "200px", // Start loading images 200px before viewport
+    placeholder: "blur", // Use blur placeholder
     priority: {
       aboveFold: true, // Prioritize above-fold images
       carousel: true, // Prioritize first carousel image
@@ -35,19 +35,17 @@ export const PERFORMANCE_CONFIG = {
 
   // Font loading strategy
   fonts: {
-    display: 'swap', // Use font-display: swap
+    display: "swap", // Use font-display: swap
     preload: true, // Preload critical fonts
-    subset: 'latin', // Load only latin subset
+    subset: "latin", // Load only latin subset
   },
 
   // Resource hints
   resourceHints: {
     preconnect: [
-      'https://res.cloudinary.com', // Cloudinary CDN
+      "https://res.cloudinary.com", // Cloudinary CDN
     ],
-    dnsPrefetch: [
-      'https://res.cloudinary.com',
-    ],
+    dnsPrefetch: ["https://res.cloudinary.com"],
   },
 
   // JavaScript optimization
@@ -82,10 +80,10 @@ export const PERFORMANCE_CONFIG = {
  */
 export function getImageLoadingStrategy(index = 0, isAboveFold = false) {
   const shouldPrioritize = index === 0 || isAboveFold;
-  
+
   return {
-    loading: shouldPrioritize ? 'eager' : 'lazy',
-    fetchpriority: shouldPrioritize ? 'high' : 'low',
+    loading: shouldPrioritize ? "eager" : "lazy",
+    fetchpriority: shouldPrioritize ? "high" : "low",
     priority: shouldPrioritize,
   };
 }
@@ -94,17 +92,17 @@ export function getImageLoadingStrategy(index = 0, isAboveFold = false) {
  * Get cache-control header value
  * @param {string} type - Resource type (static, api, page, image)
  */
-export function getCacheControl(type = 'page') {
+export function getCacheControl(type = "page") {
   const { cache } = PERFORMANCE_CONFIG;
-  
+
   switch (type) {
-    case 'static':
+    case "static":
       return `public, max-age=${cache.staticAssets}, immutable`;
-    case 'api':
+    case "api":
       return `public, s-maxage=${cache.apiResponses}, stale-while-revalidate=${cache.apiResponses * 2}`;
-    case 'image':
+    case "image":
       return `public, max-age=${cache.images}, immutable`;
-    case 'page':
+    case "page":
     default:
       return `public, max-age=${cache.pages}, must-revalidate`;
   }
@@ -118,7 +116,7 @@ export function getCacheControl(type = 'page') {
 export function meetsThreshold(metric, value) {
   const threshold = PERFORMANCE_CONFIG.thresholds[metric.toLowerCase()];
   if (!threshold) return true;
-  
+
   return value <= threshold;
 }
 

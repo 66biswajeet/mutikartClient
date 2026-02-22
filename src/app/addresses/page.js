@@ -124,7 +124,7 @@ export default function AddressesPage() {
       addresses.map((addr) => ({
         ...addr,
         isDefault: addr.id === addressId,
-      }))
+      })),
     );
     // TODO: Update backend
   };
@@ -136,8 +136,8 @@ export default function AddressesPage() {
         addresses.map((addr) =>
           addr.id === editingAddress.id
             ? { ...editingAddress, ...formData }
-            : addr
-        )
+            : addr,
+        ),
       );
     } else {
       // Add new

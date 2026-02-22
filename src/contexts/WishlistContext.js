@@ -74,7 +74,7 @@ export function WishlistProvider({ children }) {
       } else {
         // ROLLBACK: Remove optimistic item on failure
         setWishlist((prev) =>
-          prev.filter((item) => item.id !== optimisticItem.id)
+          prev.filter((item) => item.id !== optimisticItem.id),
         );
         setWishlistCount((prev) => prev - 1);
         return { success: false, message: data.message };
@@ -99,8 +99,8 @@ export function WishlistProvider({ children }) {
           (item) =>
             item.productId !== productId &&
             item._id !== productId &&
-            item.id !== productId
-        )
+            item.id !== productId,
+        ),
       );
       setWishlistCount((prev) => Math.max(0, prev - 1));
 
@@ -109,7 +109,7 @@ export function WishlistProvider({ children }) {
         {
           method: "DELETE",
           credentials: "include",
-        }
+        },
       );
 
       const data = await response.json();
@@ -143,7 +143,7 @@ export function WishlistProvider({ children }) {
         item.productId === productId ||
         item._id === productId ||
         item.id === productId ||
-        item.productId?.toString() === productId?.toString()
+        item.productId?.toString() === productId?.toString(),
     );
   };
 
@@ -181,10 +181,19 @@ export function useWishlist() {
       wishlist: [],
       wishlistCount: 0,
       loading: false,
-      addToWishlist: async () => ({ success: false, message: 'No wishlist provider' }),
-      removeFromWishlist: async () => ({ success: false, message: 'No wishlist provider' }),
+      addToWishlist: async () => ({
+        success: false,
+        message: "No wishlist provider",
+      }),
+      removeFromWishlist: async () => ({
+        success: false,
+        message: "No wishlist provider",
+      }),
       isInWishlist: () => false,
-      toggleWishlist: async () => ({ success: false, message: 'No wishlist provider' }),
+      toggleWishlist: async () => ({
+        success: false,
+        message: "No wishlist provider",
+      }),
       refreshWishlist: async () => {},
     };
   }

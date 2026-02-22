@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import styles from "./profile.module.css";
- 
+
 import CategoryBar from "@/components/CategoryBar/CategoryBar";
 
 export default function ProfilePage() {

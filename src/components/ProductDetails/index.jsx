@@ -6,8 +6,14 @@ import CategoryBar from "@/components/CategoryBar/CategoryBar";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 import dynamic from "next/dynamic";
-const ProductTabs = dynamic(() => import("./ProductTabs"), { ssr: false, loading: () => null });
-const RelatedProducts = dynamic(() => import("./RelatedProducts"), { ssr: false, loading: () => null });
+const ProductTabs = dynamic(() => import("./ProductTabs"), {
+  ssr: false,
+  loading: () => null,
+});
+const RelatedProducts = dynamic(() => import("./RelatedProducts"), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function ProductDetails({ productSlug }) {
   const router = useRouter();
@@ -21,10 +27,13 @@ export default function ProductDetails({ productSlug }) {
     async function fetchProduct() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/products?slug=${encodeURIComponent(productSlug)}`, {
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        });
+        const res = await fetch(
+          `/api/products?slug=${encodeURIComponent(productSlug)}`,
+          {
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          },
+        );
 
         if (!res.ok) throw new Error("Failed to fetch product");
         const data = await res.json();
@@ -66,9 +75,13 @@ export default function ProductDetails({ productSlug }) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-4">Product Not Found</h1>
-        <p className="text-gray-600 mb-8">{error || "The product you're looking for doesn't exist."}</p>
-        <button onClick={() => router.push("/")}
-          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+        <p className="text-gray-600 mb-8">
+          {error || "The product you're looking for doesn't exist."}
+        </p>
+        <button
+          onClick={() => router.push("/")}
+          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+        >
           Return to Home
         </button>
       </div>
@@ -88,13 +101,22 @@ export default function ProductDetails({ productSlug }) {
   return (
     <div>
       <CategoryBar />
-      <div className="bg-gray-50 min-h-screen" style={{ paddingTop: 'calc(var(--header-height) + var(--category-bar-height))' }}>
+      <div
+        className="bg-gray-50 min-h-screen"
+        style={{
+          paddingTop: "calc(var(--header-height) + var(--category-bar-height))",
+        }}
+      >
         <div className="bg-white border-b">
           <div className="container mx-auto px-4 py-3">
             <nav className="flex text-sm text-gray-600">
-              <a href="/" className="hover:text-blue-500">Home</a>
+              <a href="/" className="hover:text-blue-500">
+                Home
+              </a>
               <span className="mx-2">/</span>
-              <a href="/products" className="hover:text-blue-500">Products</a>
+              <a href="/products" className="hover:text-blue-500">
+                Products
+              </a>
               <span className="mx-2">/</span>
               <span className="text-gray-900">{product.product_name}</span>
             </nav>
@@ -104,8 +126,17 @@ export default function ProductDetails({ productSlug }) {
         <div className="container mx-auto px-4 py-8">
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
-              <ProductGallery images={images} selectedImage={selectedImage} setSelectedImage={setSelectedImage} productName={product.product_name} />
-              <ProductInfo product={product} quantity={quantity} onQuantityChange={handleQuantityChange} />
+              <ProductGallery
+                images={images}
+                selectedImage={selectedImage}
+                setSelectedImage={setSelectedImage}
+                productName={product.product_name}
+              />
+              <ProductInfo
+                product={product}
+                quantity={quantity}
+                onQuantityChange={handleQuantityChange}
+              />
             </div>
           </div>
 

@@ -4,7 +4,8 @@ import { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 
-const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
+const ADMIN_API_URL =
+  process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -19,7 +20,7 @@ export function AuthProvider({ children }) {
     if (accountCookie) {
       try {
         const userData = JSON.parse(
-          decodeURIComponent(accountCookie.split("=")[1])
+          decodeURIComponent(accountCookie.split("=")[1]),
         );
         setUser(userData);
       } catch (error) {
@@ -122,8 +123,8 @@ export function useAuth() {
     return {
       user: null,
       loading: false,
-      login: async () => ({ success: false, message: 'No auth provider' }),
-      register: async () => ({ success: false, message: 'No auth provider' }),
+      login: async () => ({ success: false, message: "No auth provider" }),
+      register: async () => ({ success: false, message: "No auth provider" }),
       logout: async () => {},
       isAuthenticated: false,
     };

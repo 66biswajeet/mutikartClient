@@ -8,12 +8,16 @@ import ProductFeed from "@/components/ProductFeed/ProductFeed";
 import styles from "./page.module.css";
 
 // Lazy load heavy components
-const PopularCategories = lazy(() => import("@/components/PopularCategories/PopularCategories"));
+const PopularCategories = lazy(
+  () => import("@/components/PopularCategories/PopularCategories"),
+);
 const StickyNote = lazy(() => import("@/components/StickyNote/StickyNote"));
 const Sidebar = lazy(() => import("@/components/Sidebar/Sidebar"));
 const AuthPrompt = lazy(() => import("@/components/AuthPrompt/AuthPrompt"));
 const Footer = lazy(() => import("@/components/Footer/Footer"));
-const AnimatedCounter = lazy(() => import("@/components/AnimatedCounter/AnimatedCounter"));
+const AnimatedCounter = lazy(
+  () => import("@/components/AnimatedCounter/AnimatedCounter"),
+);
 
 export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -31,11 +35,11 @@ export default function Home() {
       <CategoryBar onMenuClick={handleMenuClick} />
       <HeroCarousel />
       <AdTicker />
-      
-      <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
+
+      <Suspense fallback={<div style={{ minHeight: "200px" }} />}>
         <PopularCategories />
       </Suspense>
-      
+
       <Suspense fallback={null}>
         <StickyNote />
       </Suspense>

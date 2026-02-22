@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
+const ADMIN_API_URL =
+  process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
 
 export async function GET(request) {
   try {
@@ -11,7 +12,7 @@ export async function GET(request) {
     if (!token) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -28,7 +29,7 @@ export async function GET(request) {
     console.error("Wishlist fetch error:", error);
     return NextResponse.json(
       { success: false, message: "Failed to fetch wishlist" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -41,7 +42,7 @@ export async function POST(request) {
     if (!token) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -51,7 +52,7 @@ export async function POST(request) {
     if (!productId) {
       return NextResponse.json(
         { success: false, message: "Product ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -70,7 +71,7 @@ export async function POST(request) {
     console.error("Add to wishlist error:", error);
     return NextResponse.json(
       { success: false, message: "Failed to add to wishlist" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -83,7 +84,7 @@ export async function DELETE(request) {
     if (!token) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -93,7 +94,7 @@ export async function DELETE(request) {
     if (!productId) {
       return NextResponse.json(
         { success: false, message: "Product ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -104,7 +105,7 @@ export async function DELETE(request) {
         headers: {
           Cookie: `uat=${token.value}`,
         },
-      }
+      },
     );
 
     const data = await response.json();
@@ -113,7 +114,7 @@ export async function DELETE(request) {
     console.error("Remove from wishlist error:", error);
     return NextResponse.json(
       { success: false, message: "Failed to remove from wishlist" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

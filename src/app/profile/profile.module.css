@@ -27,7 +27,7 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0295db 0%, #FF8A00 100%);
+  background: linear-gradient(135deg, #0295db 0%, #ff8a00 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -90,7 +90,7 @@
 }
 
 .navItemActive {
-  background: linear-gradient(135deg, #0295db 0%, #FF8A00 100%);
+  background: linear-gradient(135deg, #0295db 0%, #ff8a00 100%);
   color: white;
 }
 
@@ -134,7 +134,7 @@
 .title {
   font-size: 28px;
   font-weight: 600;
-  color: #1F2933;
+  color: #1f2933;
   margin: 0 0 32px 0;
 }
 
@@ -214,7 +214,7 @@
 }
 
 .saveBtn {
-  background: linear-gradient(135deg, #0295db 0%, #FF8A00 100%);
+  background: linear-gradient(135deg, #0295db 0%, #ff8a00 100%);
   color: white;
   border: none;
 }
@@ -302,10 +302,10 @@
 
 .verifyBtn {
   padding: 10px 24px;
-  border: 2px solid #16A34A;
+  border: 2px solid #16a34a;
   border-radius: 6px;
   background: white;
-  color: #16A34A;
+  color: #16a34a;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -313,7 +313,7 @@
 }
 
 .verifyBtn:hover {
-  background: #16A34A;
+  background: #16a34a;
   color: white;
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
@@ -391,7 +391,7 @@
 .modalTitle {
   font-size: 24px;
   font-weight: 700;
-  color: #1F2933;
+  color: #1f2933;
   margin: 0 0 16px 0;
   text-align: center;
 }
@@ -431,7 +431,7 @@
 .verifySubmitBtn {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #0295db 0%, #FF8A00 100%);
+  background: linear-gradient(135deg, #0295db 0%, #ff8a00 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -453,7 +453,7 @@
 }
 
 .errorText {
-  color: #Dc2626;
+  color: #dc2626;
   font-size: 14px;
   margin: -8px 0 16px 0;
   text-align: center;
@@ -480,5 +480,5 @@
 }
 
 .resendLink:hover {
-  color: #FF8A00;
+  color: #ff8a00;
 }

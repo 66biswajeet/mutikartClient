@@ -63,7 +63,9 @@ export default function ProductCard({ product }) {
 
   const discount =
     displayOriginalPrice && displayPrice
-      ? Math.round(((displayOriginalPrice - displayPrice) / displayOriginalPrice) * 100)
+      ? Math.round(
+          ((displayOriginalPrice - displayPrice) / displayOriginalPrice) * 100,
+        )
       : null;
 
   const getActionButton = () => {
@@ -81,9 +83,12 @@ export default function ProductCard({ product }) {
         Buy Now
       </>
     );
-    
+
     return (
-      <Link href={`/product/${productSlug}`} className={`${styles.actionBtn} ${styles.buyBtn}`}>
+      <Link
+        href={`/product/${productSlug}`}
+        className={`${styles.actionBtn} ${styles.buyBtn}`}
+      >
         {buttonContent}
       </Link>
     );
@@ -92,9 +97,9 @@ export default function ProductCard({ product }) {
   return (
     <Link href={`/product/${productSlug}`} className={styles.card}>
       <div className={styles.imageContainer}>
-        <Image 
-          src={displayImage} 
-          alt={displayTitle} 
+        <Image
+          src={displayImage}
+          alt={displayTitle}
           className={styles.image}
           width={300}
           height={300}
@@ -114,13 +119,18 @@ export default function ProductCard({ product }) {
             -{discount}%
           </span>
         )}
-        <button 
+        <button
           className={`${styles.wishlistBtn} ${inWishlist ? styles.inWishlist : ""}`}
           onClick={handleWishlistClick}
           disabled={isAdding}
           aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill={inWishlist ? "currentColor" : "none"}>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill={inWishlist ? "currentColor" : "none"}
+          >
             <path
               d="M17.367 3.842a4.583 4.583 0 0 0-6.484 0L10 4.725l-.883-.883a4.583 4.583 0 1 0-6.484 6.483l.884.884L10 17.692l6.483-6.483.884-.884a4.583 4.583 0 0 0 0-6.483z"
               stroke="currentColor"
@@ -140,14 +150,14 @@ export default function ProductCard({ product }) {
           <div className={styles.priceContainer}>
             <span className={styles.price}>${displayPrice}</span>
             {displayOriginalPrice && displayOriginalPrice !== displayPrice && (
-              <span className={styles.originalPrice}>${displayOriginalPrice}</span>
+              <span className={styles.originalPrice}>
+                ${displayOriginalPrice}
+              </span>
             )}
           </div>
         )}
 
-        <div className={styles.actions}>
-          {getActionButton()}
-        </div>
+        <div className={styles.actions}>{getActionButton()}</div>
       </div>
     </Link>
   );

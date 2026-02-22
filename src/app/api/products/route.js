@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
+const ADMIN_API_URL =
+  process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
 
 /**
  * GET /api/products - Fetch products from admin backend
@@ -106,7 +107,7 @@ export async function GET(request) {
         error: error.message,
         adminUrl: ADMIN_API_URL,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

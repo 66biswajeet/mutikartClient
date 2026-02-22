@@ -4,12 +4,17 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import styles from "./wishlist.module.css";
- 
+
 import CategoryBar from "@/components/CategoryBar/CategoryBar";
 
 export default function WishlistPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
-  const { wishlist, wishlistCount, removeFromWishlist, loading: wishlistLoading } = useWishlist();
+  const {
+    wishlist,
+    wishlistCount,
+    removeFromWishlist,
+    loading: wishlistLoading,
+  } = useWishlist();
   const [filteredItems, setFilteredItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("recently-added");
@@ -33,7 +38,7 @@ export default function WishlistPage() {
     // Search filter
     if (searchQuery) {
       items = items.filter((item) =>
-        item.product_name?.toLowerCase().includes(searchQuery.toLowerCase())
+        item.product_name?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
 
@@ -43,10 +48,18 @@ export default function WishlistPage() {
         items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         break;
       case "price-low-high":
-        items.sort((a, b) => parseFloat(a.sale_price || a.price) - parseFloat(b.sale_price || b.price));
+        items.sort(
+          (a, b) =>
+            parseFloat(a.sale_price || a.price) -
+            parseFloat(b.sale_price || b.price),
+        );
         break;
       case "price-high-low":
-        items.sort((a, b) => parseFloat(b.sale_price || b.price) - parseFloat(a.sale_price || a.price));
+        items.sort(
+          (a, b) =>
+            parseFloat(b.sale_price || b.price) -
+            parseFloat(a.sale_price || a.price),
+        );
         break;
     }
 
@@ -343,11 +356,20 @@ export default function WishlistPage() {
               >
                 {filteredItems.map((item) => {
                   const price = parseFloat(item.sale_price || item.price || 0);
-                  const originalPrice = item.sale_price ? parseFloat(item.price || 0) : null;
-                  const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
-                  
+                  const originalPrice = item.sale_price
+                    ? parseFloat(item.price || 0)
+                    : null;
+                  const discount = originalPrice
+                    ? Math.round(
+                        ((originalPrice - price) / originalPrice) * 100,
+                      )
+                    : 0;
+
                   return (
-                    <div key={item.productId || item.id} className={styles.productCard}>
+                    <div
+                      key={item.productId || item.id}
+                      className={styles.productCard}
+                    >
                       <button
                         className={styles.removeBtn}
                         onClick={() => handleRemoveFromWishlist(item.productId)}
@@ -369,9 +391,13 @@ export default function WishlistPage() {
                       </button>
 
                       <div className={styles.productImage}>
-                        <img 
-                          src={item.product_thumbnail_image?.url || item.product_thumbnail_image || '/carousel/1.jpg'} 
-                          alt={item.product_name || 'Product'} 
+                        <img
+                          src={
+                            item.product_thumbnail_image?.url ||
+                            item.product_thumbnail_image ||
+                            "/carousel/1.jpg"
+                          }
+                          alt={item.product_name || "Product"}
                         />
                         {discount > 0 && (
                           <span className={styles.recentlyAdded}>
@@ -381,7 +407,9 @@ export default function WishlistPage() {
                       </div>
 
                       <div className={styles.productInfo}>
-                        <h3 className={styles.productName}>{item.product_name || 'Unnamed Product'}</h3>
+                        <h3 className={styles.productName}>
+                          {item.product_name || "Unnamed Product"}
+                        </h3>
                         <div className={styles.productRating}>
                           <div className={styles.stars}>
                             {"★".repeat(Math.floor(item.rating_count || 4))}

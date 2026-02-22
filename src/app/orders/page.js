@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import styles from "./orders.module.css";
- 
+
 import CategoryBar from "@/components/CategoryBar/CategoryBar";
 
 export default function OrdersPage() {
@@ -77,7 +77,7 @@ export default function OrdersPage() {
       setFilteredOrders(orders);
     } else {
       setFilteredOrders(
-        orders.filter((order) => order.status === activeFilter)
+        orders.filter((order) => order.status === activeFilter),
       );
     }
   }, [activeFilter, orders]);

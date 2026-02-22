@@ -15,47 +15,50 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
   const inWishlist = isInWishlist(product._id);
 
   // Calculate discount percentage
-  const discountPercentage = product.price && product.sale_price
-    ? Math.round(((product.price - product.sale_price) / product.price) * 100)
-    : 0;
+  const discountPercentage =
+    product.price && product.sale_price
+      ? Math.round(((product.price - product.sale_price) / product.price) * 100)
+      : 0;
 
   // Stock status check
-  const isOutOfStock = product.stock_status === 'out_of_stock' || product.quantity < 1;
+  const isOutOfStock =
+    product.stock_status === "out_of_stock" || product.quantity < 1;
   const isLowStock = !isOutOfStock && product.quantity <= 10;
 
   // Handle add to cart
   const handleAddToCart = async () => {
     if (!user) {
-      router.push('/auth/login');
+      router.push("/auth/login");
       return;
     }
 
     try {
       setAddingToCart(true);
-      const API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
-      
+      const API_URL =
+        process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
+
       const response = await fetch(`${API_URL}/api/cart`, {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           productId: product._id,
-          quantity: quantity
-        })
+          quantity: quantity,
+        }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        alert('Product added to cart!');
+        alert("Product added to cart!");
       } else {
-        alert(data.message || 'Failed to add to cart');
+        alert(data.message || "Failed to add to cart");
       }
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      alert('Failed to add to cart');
+      console.error("Error adding to cart:", error);
+      alert("Failed to add to cart");
     } finally {
       setAddingToCart(false);
     }
@@ -64,26 +67,26 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
   // Handle buy now
   const handleBuyNow = async () => {
     await handleAddToCart();
-    router.push('/checkout');
+    router.push("/checkout");
   };
 
   // Handle wishlist toggle
   const handleWishlistToggle = async () => {
     if (!user) {
-      router.push('/auth/login');
+      router.push("/auth/login");
       return;
     }
 
     try {
       setAddingToWishlist(true);
-      
+
       if (inWishlist) {
         await removeFromWishlist(product._id);
       } else {
         await addToWishlist(product._id);
       }
     } catch (error) {
-      console.error('Error toggling wishlist:', error);
+      console.error("Error toggling wishlist:", error);
     } finally {
       setAddingToWishlist(false);
     }
@@ -96,7 +99,7 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           {product.product_name}
         </h1>
-        
+
         {/* Brand */}
         {product.brand_id?.name && (
           <p className="text-sm text-gray-600">
@@ -113,8 +116,8 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
               key={index}
               className={`w-5 h-5 ${
                 index < Math.floor(product.rating || 0)
-                  ? 'text-yellow-400 fill-current'
-                  : 'text-gray-300'
+                  ? "text-yellow-400 fill-current"
+                  : "text-gray-300"
               }`}
               viewBox="0 0 20 20"
             >
@@ -122,7 +125,7 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
             </svg>
           ))}
           <span className="ml-2 text-sm text-gray-600">
-            {product.rating ? product.rating.toFixed(1) : '0.0'}
+            {product.rating ? product.rating.toFixed(1) : "0.0"}
           </span>
         </div>
         <span className="text-sm text-gray-400">|</span>
@@ -137,7 +140,7 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
           <span className="text-3xl font-bold text-gray-900">
             ${product.sale_price?.toFixed(2)}
           </span>
-          
+
           {product.price && product.price !== product.sale_price && (
             <>
               <span className="text-xl text-gray-500 line-through">
@@ -210,9 +213,13 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
           disabled={isOutOfStock || addingToCart}
           className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
-          {addingToCart ? 'Adding...' : isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+          {addingToCart
+            ? "Adding..."
+            : isOutOfStock
+              ? "Out of Stock"
+              : "Add to Cart"}
         </button>
-        
+
         <button
           onClick={handleBuyNow}
           disabled={isOutOfStock || addingToCart}
@@ -229,7 +236,7 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
         className="flex items-center justify-center space-x-2 border-2 border-gray-300 px-6 py-3 rounded-lg hover:border-red-500 hover:text-red-500 transition-colors"
       >
         <svg
-          className={`w-5 h-5 ${inWishlist ? 'fill-current text-red-500' : ''}`}
+          className={`w-5 h-5 ${inWishlist ? "fill-current text-red-500" : ""}`}
           fill={inWishlist ? "currentColor" : "none"}
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -241,7 +248,7 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
             d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
           />
         </svg>
-        <span>{inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}</span>
+        <span>{inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}</span>
       </button>
 
       {/* Product Info */}
@@ -255,7 +262,9 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
         {product.category_id?.name && (
           <div className="flex">
             <span className="text-gray-600 w-32">Category:</span>
-            <span className="text-gray-900 font-medium">{product.category_id.name}</span>
+            <span className="text-gray-900 font-medium">
+              {product.category_id.name}
+            </span>
           </div>
         )}
         {product.tags && product.tags.length > 0 && (

@@ -133,9 +133,9 @@ export default function Header() {
 
           {/* Right Icons */}
           <div className={styles.rightIcons}>
-            <a 
-              href="/wishlist" 
-              className={styles.iconButton} 
+            <a
+              href="/wishlist"
+              className={styles.iconButton}
               aria-label="Wishlist"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
