@@ -1,6 +1,4 @@
 "use client";
-//////// Hii Changes /////////
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import styles from "./profile.module.css";
