@@ -160,6 +160,18 @@
   font-size: 0.85rem;
 }
 
+.variantBadge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background-color: rgba(0, 0, 0, 0.55);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
 .productInfo {
   padding: 12px;
   display: flex;

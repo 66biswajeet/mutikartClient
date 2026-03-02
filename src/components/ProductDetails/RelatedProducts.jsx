@@ -8,37 +8,56 @@ export default function RelatedProducts({ currentProductId }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchRelatedProducts = async () => {
       try {
         setLoading(true);
-        const API_URL =
-          process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
 
+        // Use a relative URL so the request goes to the same Next.js server
+        // regardless of environment — avoids cross-origin issues in the browser.
         const response = await fetch(
-          `${API_URL}/api/product?limit=4&status=1`,
-          {
-            credentials: "include",
-          },
+          `/api/vendor-products?paginate=5&sortBy=desc`,
+          { credentials: "include" },
         );
+
+        if (!mounted) return;
 
         if (response.ok) {
           const data = await response.json();
-          if (data.success && data.data) {
-            // Filter out current product
-            const filtered = data.data.filter(
-              (p) => p._id !== currentProductId,
-            );
-            setProducts(filtered.slice(0, 4));
+          if (mounted && data.success && data.data) {
+            // Deduplicate by master_product_id and filter out current product
+            const seen = new Set();
+            const filtered = [];
+            for (const p of data.data) {
+              const key = String(p.master_product_id || p._id);
+              if (
+                key !== String(currentProductId) &&
+                String(p._id) !== String(currentProductId) &&
+                !seen.has(key)
+              ) {
+                seen.add(key);
+                filtered.push(p);
+              }
+              if (filtered.length >= 4) break;
+            }
+            setProducts(filtered);
           }
         }
       } catch (error) {
-        console.error("Error fetching related products:", error);
+        if (mounted) {
+          console.error("Error fetching related products:", error);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
     fetchRelatedProducts();
+
+    return () => {
+      mounted = false;
+    };
   }, [currentProductId]);
 
   if (loading) {

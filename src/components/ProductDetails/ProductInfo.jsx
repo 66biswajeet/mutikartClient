@@ -1,18 +1,79 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
 import { useRouter } from "next/navigation";
 
-export default function ProductInfo({ product, quantity, onQuantityChange }) {
+/**
+ * Build a variant axes map from all sibling vendor-products.
+ *
+ * Returns:
+ *   axes: [{ variantId, options: string[] }]  — one entry per variant dimension
+ *   findVariant: (selections: { [variantId]: string }) => vendorProduct | null
+ */
+function buildVariantData(allVariants) {
+  if (!allVariants || allVariants.length === 0) return { axes: [], findVariant: () => null };
+
+  // Collect all unique options per variantId from selected_variants of each vendor product
+  const axisMap = new Map(); // variantId -> Set<string>
+
+  for (const vp of allVariants) {
+    const sv = vp.selected_variants || {};
+    for (const [variantId, optionArr] of Object.entries(sv)) {
+      if (!axisMap.has(variantId)) axisMap.set(variantId, new Set());
+      for (const opt of optionArr) {
+        if (opt) axisMap.get(variantId).add(opt);
+      }
+    }
+  }
+
+  const axes = Array.from(axisMap.entries()).map(([variantId, optSet]) => ({
+    variantId,
+    options: Array.from(optSet),
+  }));
+
+  // Find the variant product that matches a given selection map
+  const findVariant = (selections) => {
+    return (
+      allVariants.find((vp) => {
+        const sv = vp.selected_variants || {};
+        return axes.every(({ variantId }) => {
+          const chosen = selections[variantId];
+          const vpOptions = sv[variantId] || [];
+          return !chosen || vpOptions.includes(chosen);
+        });
+      }) || null
+    );
+  };
+
+  return { axes, findVariant };
+}
+
+export default function ProductInfo({ product, quantity, onQuantityChange, allVariants = [], onVariantSelect }) {
   const router = useRouter();
   const { user } = useAuth();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { addToCart } = useCart();
   const [addingToCart, setAddingToCart] = useState(false);
   const [addingToWishlist, setAddingToWishlist] = useState(false);
+
+  // Build variant selectors
+  const { axes, findVariant } = useMemo(
+    () => buildVariantData(allVariants),
+    [allVariants],
+  );
+
+  // Initialise selections from the currently displayed product's selected_variants
+  const [selections, setSelections] = useState(() => {
+    const sv = product?.selected_variants || {};
+    const init = {};
+    for (const [k, v] of Object.entries(sv)) {
+      init[k] = Array.isArray(v) ? v[0] : v;
+    }
+    return init;
+  });
 
   const inWishlist = isInWishlist(product._id);
 
@@ -24,8 +85,24 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
 
   // Stock status check
   const isOutOfStock =
-    product.stock_status === "out_of_stock" || product.quantity < 1;
-  const isLowStock = !isOutOfStock && product.quantity <= 10;
+    product.stock_status === "out_of_stock" ||
+    product.stock_quantity <= 0 ||
+    product.quantity < 1;
+  const isLowStock =
+    !isOutOfStock &&
+    (product.stock_quantity <= 10 || product.quantity <= 10);
+
+  // Handle variant option click
+  const handleOptionClick = (variantId, option) => {
+    const newSelections = { ...selections, [variantId]: option };
+    setSelections(newSelections);
+
+    // Find the matching vendor product for these selections
+    const matched = findVariant(newSelections);
+    if (matched && onVariantSelect) {
+      onVariantSelect(matched);
+    }
+  };
 
   // Handle add to cart
   const handleAddToCart = async () => {
@@ -77,6 +154,21 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
     }
   };
 
+  // Variant axis display names — we try to derive a human-readable label from
+  // the options themselves (colour names → "Color", size labels → "Size").
+  const getAxisLabel = (axis) => {
+    const opts = axis.options.map((o) => o.toLowerCase());
+    const sizeKeywords = ["xs", "s", "m", "l", "xl", "xxl", "small", "medium", "large", "x small", "x large", "xx large"];
+    const colorKeywords = ["white", "black", "red", "blue", "green", "yellow", "navy", "gray", "grey", "pink", "orange", "purple", "brown"];
+    const isSizeLike = opts.some((o) => sizeKeywords.includes(o));
+    const isColorLike = opts.some((o) => colorKeywords.includes(o));
+    if (isSizeLike) return "Size";
+    if (isColorLike) return "Color";
+    return "Option";
+  };
+
+  const stockQty = product.stock_quantity ?? product.quantity ?? 0;
+
   return (
     <div className="flex flex-col space-y-6">
       {/* Product Title */}
@@ -89,6 +181,14 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
         {product.brand_id?.name && (
           <p className="text-sm text-gray-600">
             Brand: <span className="font-medium">{product.brand_id.name}</span>
+          </p>
+        )}
+
+        {/* Vendor */}
+        {product.vendor_name && (
+          <p className="text-sm text-gray-600">
+            Sold by:{" "}
+            <span className="font-medium text-blue-600">{product.vendor_name}</span>
           </p>
         )}
       </div>
@@ -123,17 +223,19 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
       <div className="border-t border-b border-gray-200 py-4">
         <div className="flex items-baseline space-x-3">
           <span className="text-3xl font-bold text-gray-900">
-            ${product.sale_price?.toFixed(2)}
+            ₹{(product.sale_price || product.price)?.toFixed(2)}
           </span>
 
           {product.price && product.price !== product.sale_price && (
             <>
               <span className="text-xl text-gray-500 line-through">
-                ${product.price.toFixed(2)}
+                ₹{product.price.toFixed(2)}
               </span>
-              <span className="px-2 py-1 text-sm font-semibold text-green-600 bg-green-100 rounded">
-                {discountPercentage}% OFF
-              </span>
+              {discountPercentage > 0 && (
+                <span className="px-2 py-1 text-sm font-semibold text-green-600 bg-green-100 rounded">
+                  {discountPercentage}% OFF
+                </span>
+              )}
             </>
           )}
         </div>
@@ -146,12 +248,75 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
           <p className="text-red-600 font-medium">Out of Stock</p>
         ) : isLowStock ? (
           <p className="text-orange-600 font-medium">
-            Only {product.quantity} left in stock - Order soon
+            Only {stockQty} left in stock – Order soon
           </p>
         ) : (
           <p className="text-green-600 font-medium">In Stock</p>
         )}
       </div>
+
+      {/* ── Variant Selectors ── */}
+      {axes.length > 0 && (
+        <div className="space-y-4">
+          {axes.map((axis) => {
+            const label = getAxisLabel(axis);
+            const currentSelection = selections[axis.variantId];
+            return (
+              <div key={axis.variantId}>
+                <p className="text-sm font-semibold text-gray-700 mb-2">
+                  {label}:{" "}
+                  {currentSelection && (
+                    <span className="font-normal text-gray-900">
+                      {currentSelection}
+                    </span>
+                  )}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {axis.options.map((option) => {
+                    const isSelected = currentSelection === option;
+                    // Check if this option leads to an available variant
+                    const testSelections = { ...selections, [axis.variantId]: option };
+                    const matched = findVariant(testSelections);
+                    const isAvailable = !!matched;
+                    const isOutOfStockOption =
+                      matched && matched.stock_status === "out_of_stock";
+
+                    return (
+                      <button
+                        key={option}
+                        onClick={() => handleOptionClick(axis.variantId, option)}
+                        disabled={!isAvailable}
+                        className={`
+                          px-3 py-1.5 text-sm rounded border-2 transition-all font-medium
+                          ${isSelected
+                            ? "border-blue-600 bg-blue-50 text-blue-700"
+                            : isAvailable
+                              ? "border-gray-300 bg-white text-gray-800 hover:border-blue-400"
+                              : "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through"
+                          }
+                          ${isOutOfStockOption && !isSelected ? "opacity-60" : ""}
+                        `}
+                        title={
+                          !isAvailable
+                            ? "Not available"
+                            : isOutOfStockOption
+                              ? "Out of stock"
+                              : ""
+                        }
+                      >
+                        {option}
+                        {isOutOfStockOption && !isSelected && (
+                          <span className="ml-1 text-xs text-red-400">(OOS)</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Short Description */}
       {product.short_description && (
@@ -178,11 +343,11 @@ export default function ProductInfo({ product, quantity, onQuantityChange }) {
               onChange={(e) => onQuantityChange(parseInt(e.target.value) || 1)}
               className="w-16 text-center border-x border-gray-300 py-2 focus:outline-none"
               min="1"
-              max={product.quantity}
+              max={stockQty}
             />
             <button
               onClick={() => onQuantityChange(quantity + 1)}
-              disabled={quantity >= product.quantity}
+              disabled={quantity >= stockQty}
               className="px-4 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               +

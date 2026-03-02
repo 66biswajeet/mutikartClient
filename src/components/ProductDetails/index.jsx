@@ -18,6 +18,7 @@ const RelatedProducts = dynamic(() => import("./RelatedProducts"), {
 export default function ProductDetails({ productSlug }) {
   const router = useRouter();
   const [product, setProduct] = useState(null);
+  const [allVariants, setAllVariants] = useState([]); // all sibling vendor-product variants
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -28,55 +29,61 @@ export default function ProductDetails({ productSlug }) {
       try {
         setLoading(true);
 
-        // Check if the slug is a combined vendor slug (e.g., "product-slug-vendor_product_id")
-        // If it contains vendor product data, use vendor-products API instead
-        const isVendorSlug =
-          productSlug && productSlug.match(/-[a-f0-9]{24}$/i);
+        // Check if this is a vendor slug: "product-name-<24-char-hex-id>"
+        const vendorMatch = productSlug && productSlug.match(/-([a-f0-9]{24})$/i);
 
-        let apiUrl;
-        if (isVendorSlug) {
-          // This is a vendor product slug, use vendor-products API
-          apiUrl = `/api/vendor-products?slug=${encodeURIComponent(productSlug)}`;
-        } else {
-          // This is a master product slug, use products API
-          apiUrl = `/api/products?slug=${encodeURIComponent(productSlug)}`;
-        }
+        if (vendorMatch) {
+          // --- VENDOR PRODUCT: single fetch returns current item + all siblings ---
+          // Strip the hex ID to get the master_slug, e.g. "mens-t-shirt-polo"
+          const vendorProductId = vendorMatch[1];
+          const masterSlug = productSlug.slice(0, -(vendorProductId.length + 1)); // remove "-<hexid>"
 
-        const res = await fetch(apiUrl, {
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        });
+          // ?slug=<master_slug>&paginate=200 → backend sees no hex suffix, returns ALL
+          // vendor offerings for that master product in one request
+          const res = await fetch(
+            `/api/vendor-products?slug=${encodeURIComponent(masterSlug)}&paginate=200`,
+            { credentials: "include", headers: { "Content-Type": "application/json" } },
+          );
+          if (!res.ok) throw new Error("Failed to fetch product");
+          const data = await res.json();
 
-        if (!res.ok) throw new Error("Failed to fetch product");
-        const data = await res.json();
-
-        let item = null;
-        if (data) {
-          if (Array.isArray(data.data)) {
-            // If this is a vendor slug, find the product that matches the vendor_product_id
-            const vendorMatch = productSlug.match(/-([a-f0-9]{24})$/i);
-            if (vendorMatch) {
-              const requestedVendorId = vendorMatch[1];
-              item = data.data.find(
-                (p) =>
-                  String(p.vendor_product_id || p._id) === requestedVendorId,
-              );
-              // Fallback to first item if exact match not found
-              if (!item) item = data.data[0];
-            } else {
-              item = data.data[0];
-            }
-          } else if (data.data && typeof data.data === "object") {
-            item = data.data;
-          } else if (Array.isArray(data)) {
-            item = data[0];
-          } else if (data && data._id) {
-            item = data;
+          if (!data.success || !Array.isArray(data.data) || data.data.length === 0) {
+            throw new Error("Product not found");
           }
-        }
 
-        if (!item) throw new Error("Product not found");
-        setProduct(item);
+          // Find the specific variant the user navigated to
+          const item =
+            data.data.find((p) => String(p.vendor_product_id || p._id) === vendorProductId) ||
+            data.data[0];
+
+          if (!item) throw new Error("Product not found");
+          setProduct(item);
+
+          // All siblings are already in this same response — no second fetch needed
+          const masterIdStr = String(item.master_product_id || item._id);
+          const siblings = data.data.filter(
+            (v) => String(v.master_product_id) === masterIdStr,
+          );
+          setAllVariants(siblings.length > 0 ? siblings : data.data);
+
+        } else {
+          // --- MASTER / NON-VENDOR PRODUCT ---
+          const res = await fetch(
+            `/api/products?slug=${encodeURIComponent(productSlug)}`,
+            { credentials: "include", headers: { "Content-Type": "application/json" } },
+          );
+          if (!res.ok) throw new Error("Failed to fetch product");
+          const data = await res.json();
+
+          let item = null;
+          if (Array.isArray(data.data)) item = data.data[0];
+          else if (data.data && typeof data.data === "object") item = data.data;
+          else if (Array.isArray(data)) item = data[0];
+          else if (data && data._id) item = data;
+
+          if (!item) throw new Error("Product not found");
+          setProduct(item);
+        }
       } catch (err) {
         console.error(err);
         setError(err.message || "Failed to load product");
@@ -88,8 +95,16 @@ export default function ProductDetails({ productSlug }) {
     if (productSlug) fetchProduct();
   }, [productSlug]);
 
+  // When user selects a different variant, navigate to that variant's slug.
+  const handleVariantSelect = (variantProduct) => {
+    if (variantProduct.slug && variantProduct.slug !== productSlug) {
+      router.push(`/product/${variantProduct.slug}`);
+    }
+  };
+
   const handleQuantityChange = (newQ) => {
-    if (newQ >= 1 && newQ <= (product?.quantity || 1)) setQuantity(newQ);
+    if (newQ >= 1 && newQ <= (product?.stock_quantity || product?.quantity || 1))
+      setQuantity(newQ);
   };
 
   if (loading) {
@@ -165,6 +180,8 @@ export default function ProductDetails({ productSlug }) {
                 product={product}
                 quantity={quantity}
                 onQuantityChange={handleQuantityChange}
+                allVariants={allVariants}
+                onVariantSelect={handleVariantSelect}
               />
             </div>
           </div>

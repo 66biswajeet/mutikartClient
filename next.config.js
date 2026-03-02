@@ -16,13 +16,24 @@ const nextConfig = {
         : false,
   },
 
-  // Image optimization - Updated for Next.js 16
+  // Image optimization
+  // unoptimized: true bypasses the Next.js image proxy server entirely.
+  // The browser fetches Cloudinary images directly, avoiding the
+  // "unable to get local issuer certificate" SSL error caused by the
+  // corporate network proxy intercepting outbound HTTPS connections.
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "http",
         hostname: "localhost",
-        port: "",
+        port: "3000",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "3001",
         pathname: "/**",
       },
       {
@@ -41,26 +52,31 @@ const nextConfig = {
         pathname: "/**",
       },
     ],
-    formats: ["image/webp", "image/avif"], // Use modern formats
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
-    unoptimized: false,
   },
 
   // Experimental features for better performance
   experimental: {
-    optimizeCss: true, // Enable CSS optimization
+    // optimizeCss: true, // Disabled — requires 'critters' package
     scrollRestoration: true,
   },
 
   // Production source maps (disabled for smaller bundles)
   productionBrowserSourceMaps: false,
 
-  // Turbopack config (Next.js 16+)
-  turbopack: {
-    // Empty config to acknowledge Turbopack usage
-    // Most optimizations are handled by Turbopack by default
+  // Turbopack causes crashes on Windows with Next.js 16 — disabled.
+  // Use classic Webpack bundler (the default when 'turbopack' key is absent).
+
+  // Proxy /api/* requests to the backend server so client-side fetches
+  // can use relative URLs (e.g. /api/vendor-products) without CORS issues.
+  async rewrites() {
+    const backendUrl =
+      process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000";
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${backendUrl}/api/:path*`,
+      },
+    ];
   },
 };
 

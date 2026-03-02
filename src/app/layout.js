@@ -6,9 +6,14 @@ import Header from "@/components/Header/Header";
 import CartSlider from "@/components/CartSlider/CartSlider";
 
 export const metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001"),
   title: "Multikart - Modern E-Commerce",
   description: "Modern e-commerce platform with premium products",
-  viewport: "width=device-width, initial-scale=1",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
   themeColor: "#ffffff",
 };
 
@@ -35,15 +40,6 @@ export default function RootLayout({ children }) {
         {isProduction && adminApiUrl && (
           <link rel="preconnect" href={adminApiUrl} crossOrigin="anonymous" />
         )}
-
-        {/* Font preload for better performance */}
-        <link
-          rel="preload"
-          href="/assets/fonts/your-font.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
       </head>
       <body>
         <AuthProvider>

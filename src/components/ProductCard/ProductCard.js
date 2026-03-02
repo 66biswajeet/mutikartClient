@@ -3,18 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import styles from "./ProductCard.module.css";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProductCard({ product }) {
+  const PLACEHOLDER =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='14' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
+
   const {
     _id,
     id,
     slug,
     product_name,
     product_thumbnail_image,
-    image = "/assets/images/placeholder.jpg",
+    image,
     title = "Product Title",
     description = "Short product description",
     short_description,
@@ -29,12 +33,20 @@ export default function ProductCard({ product }) {
   const productSlug = slug || productId;
   const displayTitle = product_name || title;
   const displayDescription = short_description || description;
-  const displayImage = product_thumbnail_image || image;
+  // Support both master-product shape (product_thumbnail_image) and
+  // vendor-product shape (product_thumbnail.url or media[0].url)
+  const displayImage =
+    product_thumbnail_image ||
+    product?.product_thumbnail?.url ||
+    product?.media?.[0]?.url ||
+    image ||
+    PLACEHOLDER;
   const displayPrice = sale_price || price;
   const displayOriginalPrice = price || originalPrice;
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
   const [isAdding, setIsAdding] = useState(false);
+  const router = useRouter();
 
   const inWishlist = isInWishlist(productId);
 
@@ -69,8 +81,14 @@ export default function ProductCard({ product }) {
       : null;
 
   const getActionButton = () => {
-    const buttonContent = (
-      <>
+    return (
+      <button
+        className={`${styles.actionBtn} ${styles.buyBtn}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          router.push(`/product/${productSlug}`);
+        }}
+      >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path
             d="M6 1L4.5 4M10 1l1.5 3M4 4h8l-1 6H5L4 4zM5.5 14a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zM10.5 14a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"
@@ -81,21 +99,19 @@ export default function ProductCard({ product }) {
           />
         </svg>
         Buy Now
-      </>
-    );
-
-    return (
-      <Link
-        href={`/product/${productSlug}`}
-        className={`${styles.actionBtn} ${styles.buyBtn}`}
-      >
-        {buttonContent}
-      </Link>
+      </button>
     );
   };
 
   return (
-    <Link href={`/product/${productSlug}`} className={styles.card}>
+    <div
+      className={styles.card}
+      onClick={() => router.push(`/product/${productSlug}`)}
+      onKeyDown={(e) => e.key === "Enter" && router.push(`/product/${productSlug}`)}
+      role="link"
+      tabIndex={0}
+      style={{ cursor: "pointer" }}
+    >
       <div className={styles.imageContainer}>
         <Image
           src={displayImage}
@@ -104,10 +120,12 @@ export default function ProductCard({ product }) {
           width={300}
           height={300}
           loading="lazy"
-          quality={85}
-          placeholder="blur"
-          blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YwZjBmMCIvPjwvc3ZnPg=="
+          quality={75}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          onError={(e) => {
+            e.currentTarget.onerror = null; // prevent infinite loop
+            e.currentTarget.src = PLACEHOLDER;
+          }}
         />
         {badge && (
           <span className={`${styles.badge} ${styles[badge.type] || ""}`}>
@@ -159,6 +177,6 @@ export default function ProductCard({ product }) {
 
         <div className={styles.actions}>{getActionButton()}</div>
       </div>
-    </Link>
+    </div>
   );
 }
